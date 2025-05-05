@@ -20,13 +20,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    // Rejestracja nowego użytkownika
-    @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
-        // (opcjonalnie: sprawdzenie, czy nazwa użytkownika jest już zajęta)
-        return ResponseEntity.ok(userService.saveUser(user));
-    }
-
     // Pobieranie użytkownika po nazwie użytkownika
     @GetMapping("/{username}")
     public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
