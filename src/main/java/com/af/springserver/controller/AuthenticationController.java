@@ -15,8 +15,6 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthenticationController {
 
-
-
     @Autowired
     private JwtUtil jwtUtil;
 

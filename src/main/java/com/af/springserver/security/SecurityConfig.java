@@ -28,24 +28,34 @@ public class SecurityConfig {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        // Przykładowy użytkownik w pamięci
+        UserDetails user = org.springframework.security.core.userdetails.User
+                .withUsername("admin")
+                .password(passwordEncoder.encode("admin123"))
+                .roles("USER")
+                .build();
+
+        return new org.springframework.security.provisioning.InMemoryUserDetailsManager(user);
+    }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           UserDetailsService userDetailsService) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public OncePerRequestFilter jwtFilter() {
+    public OncePerRequestFilter jwtFilter(UserDetailsService userDetailsService) {
         return new OncePerRequestFilter() {
             @Override
             protected void doFilterInternal(HttpServletRequest request,
@@ -74,6 +84,7 @@ public class SecurityConfig {
             }
         };
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
