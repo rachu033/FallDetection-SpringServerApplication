@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-public class FallEvent {
+public class Incident {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,13 +14,12 @@ public class FallEvent {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
+    private String type;
 
     private double latitude;
     private double longitude;
 
-    private boolean acknowledged = false; // czy użytkownik odpowiedział
-
-    // --- Gettery i settery ---
+    private boolean acknowledged = false;
 
     public Long getId() {
         return id;
@@ -44,6 +43,14 @@ public class FallEvent {
 
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public double getLatitude() {

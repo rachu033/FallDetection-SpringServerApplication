@@ -1,6 +1,6 @@
 package com.af.springserver.service;
 
-import com.af.springserver.model.FallEvent;
+import com.af.springserver.model.Incident;
 import com.af.springserver.repository.FallEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,12 +14,12 @@ public class FallEventService {
     @Autowired
     private FallEventRepository fallEventRepository;
 
-    public FallEvent saveFall(FallEvent fallEvent) {
-        fallEvent.setTimestamp(new Date()); // automatyczne ustawienie czasu
-        return fallEventRepository.save(fallEvent);
+    public Incident saveFall(Incident incident) {
+        incident.setTimestamp(new Date()); // automatyczne ustawienie czasu
+        return fallEventRepository.save(incident);
     }
 
-    public List<FallEvent> getFallsByUserId(Long userId) {
+    public List<Incident> getFallsByUserId(Long userId) {
         return fallEventRepository.findByUserId(userId);
     }
 }

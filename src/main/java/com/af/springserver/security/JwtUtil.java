@@ -1,24 +1,31 @@
 package com.af.springserver.security;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.stereotype.Component;
-
+import io.jsonwebtoken.Claims;
 import java.util.Date;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "tajny_klucz"; // zmień na lepszy w wersji produkcyjnej
-    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 godzina
+    private final byte[] secretBytes;
 
-    public String generateToken(String username) {
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        this.secretBytes = secret.getBytes();
+    }
+
+    public String generateToken(String subject) {
+        long expirationMillis = 1000 * 60 * 60 * 24; // 24 godziny
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMillis);
+
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .setSubject(subject)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, secretBytes)
                 .compact();
     }
 
@@ -27,12 +34,13 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token) {
-        return !getClaims(token).getExpiration().before(new Date());
+        Date expiration = getClaims(token).getExpiration();
+        return expiration != null && expiration.after(new Date());
     }
 
     private Claims getClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(secretBytes)
                 .parseClaimsJws(token)
                 .getBody();
     }
