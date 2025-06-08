@@ -23,7 +23,7 @@ public class UserController {
     // Pobieranie użytkownika po nazwie użytkownika
     @GetMapping("/{username}")
     public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
-        Optional<User> user = userService.findByUsername(username);
+        Optional<User> user = userService.findByEmail(username);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

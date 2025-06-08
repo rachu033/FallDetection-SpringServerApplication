@@ -1,56 +1,73 @@
 package com.af.springserver.controller;
 
-import com.af.springserver.model.User;
-import com.af.springserver.repository.UserRepository;
-import com.af.springserver.security.JwtUtil;
-import com.af.springserver.service.UserService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
+import com.af.springserver.security.JwtUtil;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
-
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @PostMapping("/google")
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody TokenRequest request) {
+        System.out.println("Hello WORLD!");
+        try {
+            String idToken = request.getIdToken();
+            System.out.println(idToken);
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
 
-    private final UserService userService;
+            //String email = decodedToken.getEmail();
+            String uid = decodedToken.getUid();
 
-    @Autowired
-    public AuthenticationController(UserService userService) {
-        this.userService = userService;
+            String jwt = jwtUtil.generateToken(uid);
+
+            System.out.println(jwt);
+
+            return ResponseEntity.ok().body(new TokenResponse(jwt));
+        } catch (FirebaseAuthException e) {
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(401).body("Invalid ID token: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return ResponseEntity.status(500).body("Internal error: " + e.getMessage());
+        }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        if (userService.findByUsername(user.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("Użytkownik już istnieje.");
+    public static class TokenRequest {
+        private String idToken;
+
+        public String getIdToken() {
+            return idToken;
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userService.saveUser(user);
-
-        return ResponseEntity.ok("Rejestracja zakończona sukcesem.");
+        public void setIdToken(String idToken) {
+            this.idToken = idToken;
+        }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        Optional<User> existingUser = userService.findByUsername(user.getUsername());
+    public static class TokenResponse {
+        private String jwt;
 
-        if (existingUser.isPresent() &&
-                passwordEncoder.matches(user.getPassword(), existingUser.get().getPassword())) {
-
-            String token = jwtUtil.generateToken(user.getUsername());
-            return ResponseEntity.ok(token);
+        public TokenResponse(String jwt) {
+            this.jwt = jwt;
         }
 
-        return ResponseEntity.status(401).body("Nieprawidłowe dane logowania.");
+        public String getJwt() {
+            return jwt;
+        }
+
+        public void setJwt(String jwt) {
+            this.jwt = jwt;
+        }
+    }
+
+    private String generateCustomJwt(String uid, String email) {
+        return "mocked-jwt-for-" + uid;
     }
 }
