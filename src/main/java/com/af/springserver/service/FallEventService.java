@@ -15,7 +15,7 @@ public class FallEventService {
     private FallEventRepository fallEventRepository;
 
     public Incident saveFall(Incident incident) {
-        incident.setTimestamp(new Date()); // automatyczne ustawienie czasu
+        incident.setTimestamp(new Date());
         return fallEventRepository.save(incident);
     }
 

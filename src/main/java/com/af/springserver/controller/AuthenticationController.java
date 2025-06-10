@@ -1,5 +1,8 @@
 package com.af.springserver.controller;
 
+import com.af.springserver.mapper.UserMapper;
+import com.af.springserver.model.User;
+import com.af.springserver.service.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -8,21 +11,34 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.af.springserver.security.JwtUtil;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+
     @Autowired
-    private JwtUtil jwtUtil;
+    public AuthenticationController(JwtUtil jwtUtil, UserService userService, UserMapper userMapper) {
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+    }
 
     @PostMapping("/google")
     public ResponseEntity<?> authenticateWithGoogle(@RequestBody TokenRequest request) {
-        System.out.println("Hello WORLD!");
         try {
             String idToken = request.getIdToken();
             System.out.println(idToken);
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
 
-            //String email = decodedToken.getEmail();
+            String email = decodedToken.getEmail();
+            Optional<User> user = userService.getUser(email);
+
+            if (user.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+
             String uid = decodedToken.getUid();
 
             String jwt = jwtUtil.generateToken(uid);

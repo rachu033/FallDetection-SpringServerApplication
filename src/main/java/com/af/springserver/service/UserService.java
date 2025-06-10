@@ -17,19 +17,19 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
-    }
-
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    public void addUser(User user) {
+        userRepository.save(user);
     }
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public Optional<User> getUser(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public Optional<User> getUser(String email) {
+        return userRepository.findByEmail(email);
     }
 }
