@@ -4,6 +4,8 @@ import com.af.springserver.dto.UserDto;
 import com.af.springserver.mapper.UserMapper;
 import com.af.springserver.model.User;
 import com.af.springserver.service.UserService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +32,6 @@ public class UserController {
 
     @PutMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody UserDto userDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String email = authentication.getName();
-        userDto.setEmail(email);
         User savedUser = userMapper.toEntity(userDto);
         userService.addUser(savedUser);
         return ResponseEntity.ok(savedUser);
