@@ -2,6 +2,9 @@ package com.af.springserver.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -24,6 +27,27 @@ public class User {
 
     private String theme;    // LIGHT, DARK
 
+    @ManyToMany
+    @JoinTable(
+            name = "user_relations", // nazwa tabeli pośredniej
+            joinColumns = @JoinColumn(name = "elderly_id"),
+            inverseJoinColumns = @JoinColumn(name = "caregiver_id")
+    )
+    private Set<User> elderly = new HashSet<>();
+
+    @ManyToMany(mappedBy = "elderly")
+    private Set<User> caregiver = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Incident> reports = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_incidents",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "incident_id")
+    )
+    private Set<Incident> incidents = new HashSet<>();
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -43,7 +67,6 @@ public class User {
     public String getPhoneNumber() {
         return phoneNumber;
     }
-
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
@@ -53,4 +76,60 @@ public class User {
 
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
+
+    public Set<User> getElderly() {
+        return elderly;
+    }
+    public void setElderly(Set<User> dependents) {
+        this.elderly = dependents;
+    }
+    public void addElderly(User user) {
+        this.elderly.add(user);
+    }
+    public void removeElderly(User user) {
+        this.elderly.remove(user);
+    }
+
+    public Set<User> getCaregiver() {
+        return caregiver;
+    }
+    public void setCaregiver(Set<User> guardians) {
+        this.caregiver = guardians;
+    }
+    public void addCaregiver(User user) {
+        this.caregiver.add(user);
+    }
+    public void removeCaregiver(User user) {
+        this.caregiver.remove(user);
+    }
+
+    public Set<Incident> getReports() {
+        return reports;
+    }
+    public void setReports(Set<Incident> reports) {
+        this.reports = reports;
+    }
+    public void addReport(Incident report) {
+        reports.add(report);
+        report.setUser(this);
+    }
+    public void removeReport(Incident report) {
+        reports.remove(report);
+        report.setUser(null);
+    }
+
+    public Set<Incident> getIncidents() {
+        return incidents;
+    }
+    public void setIncidents(Set<Incident> incidents) {
+        this.incidents = incidents;
+    }
+    public void addIncident(Incident incident) {
+        incidents.add(incident);
+        incident.setUser(this);
+    }
+    public void removeIncident(Incident incident) {
+        incidents.remove(incident);
+        incident.setUser(null);
+    }
 }

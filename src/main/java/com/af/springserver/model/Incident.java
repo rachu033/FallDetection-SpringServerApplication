@@ -2,6 +2,8 @@ package com.af.springserver.model;
 
 import jakarta.persistence.*;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Incident {
@@ -10,7 +12,9 @@ public class Incident {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
@@ -21,26 +25,26 @@ public class Incident {
 
     private boolean acknowledged = false;
 
+    @ManyToMany(mappedBy = "incidents")
+    private Set<User> users = new HashSet<>();
+
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Date getTimestamp() {
         return timestamp;
     }
-
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
@@ -48,7 +52,6 @@ public class Incident {
     public String getType() {
         return type;
     }
-
     public void setType(String type) {
         this.type = type;
     }
@@ -56,7 +59,6 @@ public class Incident {
     public double getLatitude() {
         return latitude;
     }
-
     public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
@@ -64,7 +66,6 @@ public class Incident {
     public double getLongitude() {
         return longitude;
     }
-
     public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
@@ -72,8 +73,14 @@ public class Incident {
     public boolean isAcknowledged() {
         return acknowledged;
     }
-
     public void setAcknowledged(boolean acknowledged) {
         this.acknowledged = acknowledged;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 }

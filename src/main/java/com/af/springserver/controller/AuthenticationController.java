@@ -29,11 +29,10 @@ public class AuthenticationController {
     public ResponseEntity<?> authenticateWithGoogle(@RequestBody TokenRequest request) {
         try {
             String idToken = request.getIdToken();
-            System.out.println(idToken);
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
 
             String email = decodedToken.getEmail();
-            Optional<User> user = userService.getUser(email);
+            Optional<User> user = userService.findUserByEmail(email);
 
             if (user.isEmpty()) {
                 return ResponseEntity.noContent().build();
