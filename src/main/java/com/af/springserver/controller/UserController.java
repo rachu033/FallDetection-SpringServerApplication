@@ -4,22 +4,26 @@ import com.af.springserver.dto.UserDto;
 import com.af.springserver.mapper.UserMapper;
 import com.af.springserver.model.User;
 import com.af.springserver.service.UserService;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin
 public class UserController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
     private final UserMapper userMapper;
@@ -30,23 +34,35 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
-    @PutMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody UserDto userDto) {
-        User savedUser = userMapper.toEntity(userDto);
-        userService.addUser(savedUser);
-        return ResponseEntity.ok(savedUser);
+    private User getAuthenticatedUserOrThrow() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("User is not authenticated");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+        String email = authentication.getName();
+        logger.info("Authenticated user email: {}", email);
+        return userService.findUserByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
 
-    @GetMapping("/get")
-    public ResponseEntity<User> getUser(@RequestBody String email) {
+    @PutMapping("/register")
+    public ResponseEntity<UserDto> registerUser(@RequestBody UserDto userDto) {
+        User userToSave = userMapper.toEntity(userDto);
+        userService.addUser(userToSave);
+        return ResponseEntity.ok(userMapper.toDto(userToSave));
+    }
+
+    @PostMapping("/get")
+    public ResponseEntity<UserDto> getUser(@RequestBody String email) {
         Optional<User> optionalUser = userService.findUserByEmail(email);
         return optionalUser
-                .map(ResponseEntity::ok)
+                .map(user -> ResponseEntity.ok(userMapper.toDto(user)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/patch")
-    public ResponseEntity<User> patchUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> patchUser(@RequestBody UserDto userDto) {
         if (userDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -61,7 +77,7 @@ public class UserController {
                     if (userDto.getTheme() != null) user.setTheme(userDto.getTheme());
 
                     userService.addUser(user);
-                    return ResponseEntity.ok(user);
+                    return ResponseEntity.ok(userMapper.toDto(user));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -69,151 +85,119 @@ public class UserController {
     @DeleteMapping("/remove")
     public ResponseEntity<Void> removeUser(@RequestBody Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/add_caregiver")
-    public ResponseEntity<User> addUserCaregiver(@RequestBody String data) {
-        Optional<User> optionalUser;
-        if(data.contains("@")) {
-            optionalUser = userService.findUserByEmail(data);
-        } else {
-            optionalUser = userService.findUserByPhoneNumber(data);
-        }
+    public ResponseEntity<UserDto> addUserCaregiver(@RequestBody String data) {
+        Optional<User> optionalUser = data.contains("@") ?
+                userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
 
-        if(optionalUser.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
 
         User invitedUser = optionalUser.get();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User loggedUser = getAuthenticatedUserOrThrow();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String email = authentication.getName();
-
-        Optional<User> loggedInUserOpt = userService.findUserByEmail(email);
-        if (loggedInUserOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        User loggedUser = loggedInUserOpt.get();
-
-        if (Objects.equals(invitedUser.getRole(), "caregiver")) {
-            return ResponseEntity.noContent().build();
-            //TODO: Correct error
+        if ("caregiver".equals(invitedUser.getRole())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already has caregiver role");
         }
 
         loggedUser.addCaregiver(invitedUser);
+        userService.addUser(loggedUser);
 
-        return optionalUser
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userMapper.toDto(loggedUser));
     }
 
     @PostMapping("/remove_caregiver")
-    public ResponseEntity<User> removeUserCaregiver(@RequestBody UserDto userDto) {
-        if(userDto.getId() == null) {
+    public ResponseEntity<UserDto> removeUserCaregiver(@RequestBody UserDto userDto) {
+        if (userDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
         Optional<User> optionalUser = userService.findUserByEmail(userDto.getEmail());
-
-        if(optionalUser.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
 
         User removedUser = optionalUser.get();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String email = authentication.getName();
-
-        Optional<User> loggedInUserOpt = userService.findUserByEmail(email);
-        if (loggedInUserOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        User loggedUser = loggedInUserOpt.get();
+        User loggedUser = getAuthenticatedUserOrThrow();
 
         loggedUser.removeCaregiver(removedUser);
+        userService.addUser(loggedUser);
 
-        return optionalUser
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userMapper.toDto(loggedUser));
     }
 
     @PostMapping("/add_elderly")
-    public ResponseEntity<User> addUserElderly(@RequestBody String data) {
-        Optional<User> optionalUser;
-        if(data.contains("@")) {
-            optionalUser = userService.findUserByEmail(data);
-        } else {
-            optionalUser = userService.findUserByPhoneNumber(data);
-        }
+    public ResponseEntity<UserDto> addUserElderly(@RequestBody String data) {
+        Optional<User> optionalUser = data.contains("@") ?
+                userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
 
-        if(optionalUser.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
 
         User invitedUser = optionalUser.get();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String email = authentication.getName();
-
-        Optional<User> loggedInUserOpt = userService.findUserByEmail(email);
-        if (loggedInUserOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        User loggedUser = loggedInUserOpt.get();
+        User loggedUser = getAuthenticatedUserOrThrow();
 
         loggedUser.addElderly(invitedUser);
+        userService.addUser(loggedUser);
 
-        return optionalUser
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userMapper.toDto(loggedUser));
     }
 
     @PostMapping("/remove_elderly")
-    public ResponseEntity<User> removeUserElderly(@RequestBody UserDto userDto) {
-        if(userDto.getId() == null) {
+    public ResponseEntity<UserDto> removeUserElderly(@RequestBody UserDto userDto) {
+        if (userDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
         Optional<User> optionalUser = userService.findUserByEmail(userDto.getEmail());
-
-        if(optionalUser.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
 
         User removedUser = optionalUser.get();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String email = authentication.getName();
-
-        Optional<User> loggedInUserOpt = userService.findUserByEmail(email);
-        if (loggedInUserOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        User loggedUser = loggedInUserOpt.get();
+        User loggedUser = getAuthenticatedUserOrThrow();
 
         loggedUser.removeElderly(removedUser);
+        userService.addUser(loggedUser);
 
-        return optionalUser
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(userMapper.toDto(loggedUser));
+    }
+
+    @GetMapping("/get_elderly")
+    public ResponseEntity<Set<UserDto>> getUserElderly() {
+        User loggedUser = getAuthenticatedUserOrThrow();
+
+        Set<User> elderlySet = loggedUser.getElderly();
+
+        if (elderlySet == null || elderlySet.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Set<UserDto> dtoSet = elderlySet.stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toSet());
+
+        return ResponseEntity.ok(dtoSet);
+    }
+
+    @GetMapping("/get_caretaker")
+    public ResponseEntity<Set<UserDto>> getUserCaretaker() {
+        User loggedUser = getAuthenticatedUserOrThrow();
+
+        Set<User> caregiverSet = loggedUser.getCaregiver();
+
+        if (caregiverSet == null || caregiverSet.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Set<UserDto> dtoSet = caregiverSet.stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toSet());
+
+        return ResponseEntity.ok(dtoSet);
     }
 }

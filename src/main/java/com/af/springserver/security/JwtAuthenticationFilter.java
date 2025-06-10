@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String jwt = authHeader.substring(7);
             try {
-                String username = jwtUtil.extractUsername(jwt);
+                String username = jwtUtil.extractEmail(jwt);
 
                 if (username != null && jwtUtil.validateToken(jwt) &&
                         SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -40,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             } catch (Exception e) {
-                // Możesz zalogować wyjątek tutaj, np. invalid token, ale nie przerywamy filtrowania
+                //
             }
         }
 
