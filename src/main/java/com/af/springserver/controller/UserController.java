@@ -30,6 +30,12 @@ public class UserController {
 
     @PutMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody UserDto userDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String email = authentication.getName();
+        userDto.setEmail(email);
         User savedUser = userMapper.toEntity(userDto);
         userService.addUser(savedUser);
         return ResponseEntity.ok(savedUser);

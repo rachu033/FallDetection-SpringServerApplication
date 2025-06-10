@@ -1,7 +1,7 @@
 package com.af.springserver.controller;
 
 import com.af.springserver.model.Incident;
-import com.af.springserver.service.FallEventService;
+import com.af.springserver.service.IncidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +16,11 @@ import java.util.Map;
 public class IncidentController {
 
     @Autowired
-    private FallEventService fallEventService;
+    private IncidentService incidentService;
 
     @PostMapping
     public ResponseEntity<Incident> reportFall(@RequestBody Incident incident) {
-        return ResponseEntity.ok(fallEventService.saveFall(incident));
+        return ResponseEntity.ok(incidentService.saveFall(incident));
     }
 
     @GetMapping("/get")
@@ -33,6 +33,6 @@ public class IncidentController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Incident>> getFallsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(fallEventService.getFallsByUserId(userId));
+        return ResponseEntity.ok(incidentService.getFallsByUserId(userId));
     }
 }

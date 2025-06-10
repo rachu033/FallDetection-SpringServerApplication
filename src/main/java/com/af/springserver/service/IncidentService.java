@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
-public class FallEventService {
+public class IncidentService {
 
     @Autowired
     private FallEventRepository fallEventRepository;
