@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/falls")
+@RequestMapping("/api/incident")
 @CrossOrigin
-public class FallEventController {
+public class IncidentController {
 
     @Autowired
     private FallEventService fallEventService;
@@ -23,7 +23,7 @@ public class FallEventController {
         return ResponseEntity.ok(fallEventService.saveFall(incident));
     }
 
-    @GetMapping("/hello")
+    @GetMapping("/get")
     public ResponseEntity<Map<String, String>> sayHello() {
         System.out.println("Hello");
         Map<String, String> response = new HashMap<>();
