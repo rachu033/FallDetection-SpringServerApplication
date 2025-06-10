@@ -1,29 +1,14 @@
-package com.af.springserver.model;
+package com.af.springserver.dto;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "users")
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class UserDto {
     private Long id;
-
     private String name;
-
     private String surname;
-
     private String email;
-
-    private String role; // Caregiver, Elderly
-
+    private String role;
     private String phoneNumber;
-
-    private String language; // PL, EN
-
-    private String theme;    // LIGHT, DARK
-
+    private String language;
+    private String theme;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
