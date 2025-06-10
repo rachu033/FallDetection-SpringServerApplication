@@ -16,20 +16,20 @@ public class JwtUtil {
         this.secretBytes = secret.getBytes();
     }
 
-    public String generateToken(String subject) {
-        long expirationMillis = 1000 * 60 * 60 * 24; // 24 godziny
+    public String generateToken(String email) {
+        long expirationMillis = 1000 * 60 * 60 * 24;
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(email)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, secretBytes)
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return getClaims(token).getSubject();
     }
 

@@ -35,9 +35,7 @@ public class AuthenticationController {
             String email = decodedToken.getEmail();
             Optional<User> user = userService.findUserByEmail(email);
 
-            String uid = decodedToken.getUid();
-
-            String jwt = jwtUtil.generateToken(uid);
+            String jwt = jwtUtil.generateToken(email);
 
             if (user.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.ACCEPTED).body(new TokenResponse(jwt));
