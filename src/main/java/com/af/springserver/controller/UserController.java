@@ -1,6 +1,8 @@
 package com.af.springserver.controller;
 
+import com.af.springserver.dto.RelationDto;
 import com.af.springserver.dto.UserDto;
+import com.af.springserver.mapper.RelationMapper;
 import com.af.springserver.mapper.UserMapper;
 import com.af.springserver.model.User;
 import com.af.springserver.service.UserService;
@@ -22,26 +24,23 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/user")
 @CrossOrigin
 public class UserController {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
-
     private final UserService userService;
     private final UserMapper userMapper;
+    private final RelationMapper relationMapper;
 
     @Autowired
-    public UserController(UserService userService, UserMapper userMapper) {
+    public UserController(UserService userService, UserMapper userMapper, RelationMapper relationMapper) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.relationMapper = relationMapper;
     }
 
     private User getAuthenticatedUserOrThrow() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            logger.warn("User is not authenticated");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
         String email = authentication.getName();
-        logger.info("Authenticated user email: {}", email);
         return userService.findUserByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
@@ -53,7 +52,7 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toDto(userToSave));
     }
 
-    @PostMapping("/get")
+    @GetMapping("/get")
     public ResponseEntity<UserDto> getUser(@RequestBody String email) {
         Optional<User> optionalUser = userService.findUserByEmail(email);
         return optionalUser
@@ -89,7 +88,7 @@ public class UserController {
     }
 
     @PostMapping("/add_caregiver")
-    public ResponseEntity<UserDto> addUserCaregiver(@RequestBody String data) {
+    public ResponseEntity<RelationDto> addUserCaregiver(@RequestBody String data) {
         Optional<User> optionalUser = data.contains("@") ?
                 userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
 
@@ -98,7 +97,6 @@ public class UserController {
         }
 
         User invitedUser = optionalUser.get();
-
         User loggedUser = getAuthenticatedUserOrThrow();
 
         if ("caregiver".equals(invitedUser.getRole())) {
@@ -108,15 +106,15 @@ public class UserController {
         loggedUser.addCaregiver(invitedUser);
         userService.addUser(loggedUser);
 
-        return ResponseEntity.ok(userMapper.toDto(loggedUser));
+        return ResponseEntity.ok(relationMapper.toDto(invitedUser));
     }
 
     @PostMapping("/remove_caregiver")
-    public ResponseEntity<UserDto> removeUserCaregiver(@RequestBody UserDto userDto) {
-        if (userDto.getId() == null) {
+    public ResponseEntity<String> removeUserCaregiver(@RequestBody RelationDto relationDto) {
+        if (relationDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        Optional<User> optionalUser = userService.findUserByEmail(userDto.getEmail());
+        Optional<User> optionalUser = userService.findUserByEmail(relationDto.getEmail());
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -127,13 +125,15 @@ public class UserController {
         loggedUser.removeCaregiver(removedUser);
         userService.addUser(loggedUser);
 
-        return ResponseEntity.ok(userMapper.toDto(loggedUser));
+        return ResponseEntity.ok("Successful");
     }
 
     @PostMapping("/add_elderly")
-    public ResponseEntity<UserDto> addUserElderly(@RequestBody String data) {
+    public ResponseEntity<RelationDto> addUserElderly(@RequestBody String data) {
         Optional<User> optionalUser = data.contains("@") ?
                 userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
+
+        System.out.println("Haha");
 
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -145,15 +145,15 @@ public class UserController {
         loggedUser.addElderly(invitedUser);
         userService.addUser(loggedUser);
 
-        return ResponseEntity.ok(userMapper.toDto(loggedUser));
+        return ResponseEntity.ok(relationMapper.toDto(invitedUser));
     }
 
     @PostMapping("/remove_elderly")
-    public ResponseEntity<UserDto> removeUserElderly(@RequestBody UserDto userDto) {
-        if (userDto.getId() == null) {
+    public ResponseEntity<String> removeUserElderly(@RequestBody RelationDto relationDto) {
+        if (relationDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
-        Optional<User> optionalUser = userService.findUserByEmail(userDto.getEmail());
+        Optional<User> optionalUser = userService.findUserByEmail(relationDto.getEmail());
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -164,11 +164,11 @@ public class UserController {
         loggedUser.removeElderly(removedUser);
         userService.addUser(loggedUser);
 
-        return ResponseEntity.ok(userMapper.toDto(loggedUser));
+        return ResponseEntity.ok("Successful");
     }
 
     @GetMapping("/get_elderly")
-    public ResponseEntity<Set<UserDto>> getUserElderly() {
+    public ResponseEntity<Set<RelationDto>> getUserElderly() {
         User loggedUser = getAuthenticatedUserOrThrow();
 
         Set<User> elderlySet = loggedUser.getElderly();
@@ -177,15 +177,15 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        Set<UserDto> dtoSet = elderlySet.stream()
-                .map(userMapper::toDto)
+        Set<RelationDto> dtoSet = elderlySet.stream()
+                .map(relationMapper::toDto)
                 .collect(Collectors.toSet());
 
         return ResponseEntity.ok(dtoSet);
     }
 
     @GetMapping("/get_caretaker")
-    public ResponseEntity<Set<UserDto>> getUserCaretaker() {
+    public ResponseEntity<Set<RelationDto>> getUserCaretaker() {
         User loggedUser = getAuthenticatedUserOrThrow();
 
         Set<User> caregiverSet = loggedUser.getCaregiver();
@@ -194,8 +194,8 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        Set<UserDto> dtoSet = caregiverSet.stream()
-                .map(userMapper::toDto)
+        Set<RelationDto> dtoSet = caregiverSet.stream()
+                .map(relationMapper::toDto)
                 .collect(Collectors.toSet());
 
         return ResponseEntity.ok(dtoSet);

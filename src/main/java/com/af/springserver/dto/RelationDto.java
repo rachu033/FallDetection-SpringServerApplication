@@ -1,14 +1,14 @@
 package com.af.springserver.dto;
 
-public class UserDto {
+//Dto for User with fewer information
+
+public class RelationDto {
     private Long id;
     private String name;
     private String surname;
     private String email;
     private String role;
     private String phoneNumber;
-    private String language;
-    private String theme;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -31,10 +31,4 @@ public class UserDto {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
-
-    public String getLanguage() { return language; }
-    public void setLanguage(String language) { this.language = language; }
-
-    public String getTheme() { return theme; }
-    public void setTheme(String theme) { this.theme = theme; }
 }
