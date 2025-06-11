@@ -30,8 +30,8 @@ public class User {
     @ManyToMany
     @JoinTable(
             name = "user_relations", // nazwa tabeli pośredniej
-            joinColumns = @JoinColumn(name = "elderly_id"),
-            inverseJoinColumns = @JoinColumn(name = "caregiver_id")
+            joinColumns = @JoinColumn(name = "caregiver_id"),
+            inverseJoinColumns = @JoinColumn(name = "elderly_id")
     )
     private Set<User> elderly = new HashSet<>();
 
@@ -126,10 +126,8 @@ public class User {
     }
     public void addIncident(Incident incident) {
         incidents.add(incident);
-        incident.setUser(this);
     }
     public void removeIncident(Incident incident) {
         incidents.remove(incident);
-        incident.setUser(null);
     }
 }
