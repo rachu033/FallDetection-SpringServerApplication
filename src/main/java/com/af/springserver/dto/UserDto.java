@@ -9,6 +9,7 @@ public class UserDto {
     private String phoneNumber;
     private String language;
     private String theme;
+    private String tokenFCM;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,4 +38,11 @@ public class UserDto {
 
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
+
+    public String getTokenFCM() {
+        return tokenFCM;
+    }
+    public void setTokenFCM(String tokenFCM) {
+        this.tokenFCM = tokenFCM;
+    }
 }

@@ -18,6 +18,7 @@ public class UserMapper {
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setLanguage(dto.getLanguage());
         user.setTheme(dto.getTheme());
+        user.setTokenFCM(dto.getTokenFCM());
 
         return user;
     }
@@ -34,6 +35,7 @@ public class UserMapper {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setLanguage(user.getLanguage());
         dto.setTheme(user.getTheme());
+        dto.setTokenFCM(user.getTokenFCM());
 
         return dto;
     }

@@ -53,11 +53,13 @@ public class UserController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<UserDto> getUser(@RequestBody String email) {
-        Optional<User> optionalUser = userService.findUserByEmail(email);
-        return optionalUser
-                .map(user -> ResponseEntity.ok(userMapper.toDto(user)))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UserDto> getUser() {
+        User user = getAuthenticatedUserOrThrow();
+        System.out.println("Kurwa user: " + user);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(userMapper.toDto(user));
     }
 
     @PatchMapping("/patch")
@@ -65,6 +67,14 @@ public class UserController {
         if (userDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
+        User loggedUser = getAuthenticatedUserOrThrow();
+        if (loggedUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if(!userDto.getId().equals(loggedUser.getId()) || !userDto.getEmail().equals(loggedUser.getEmail())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         return userService.findUserById(userDto.getId())
                 .map(user -> {
                     if (userDto.getName() != null) user.setName(userDto.getName());

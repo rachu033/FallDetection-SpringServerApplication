@@ -27,6 +27,8 @@ public class User {
 
     private String theme;    // LIGHT, DARK
 
+    private String tokenFCM;
+
     @ManyToMany
     @JoinTable(
             name = "user_relations", // nazwa tabeli pośredniej
@@ -64,18 +66,17 @@ public class User {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
 
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
+
+    public String getTokenFCM() { return tokenFCM; }
+    public void setTokenFCM(String tokenFCM) { this.tokenFCM = tokenFCM; }
 
     public Set<User> getElderly() {
         return elderly;
