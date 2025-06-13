@@ -5,6 +5,7 @@ import com.af.springserver.dto.UserDto;
 import com.af.springserver.mapper.RelationMapper;
 import com.af.springserver.mapper.UserMapper;
 import com.af.springserver.model.User;
+import com.af.springserver.service.NotificationService;
 import com.af.springserver.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,15 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final RelationMapper relationMapper;
+    private final NotificationService notificationService;
+
 
     @Autowired
-    public UserController(UserService userService, UserMapper userMapper, RelationMapper relationMapper) {
+    public UserController(UserService userService, UserMapper userMapper, RelationMapper relationMapper, NotificationService notificationService) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.relationMapper = relationMapper;
+        this.notificationService = new NotificationService();
     }
 
     private User getAuthenticatedUserOrThrow() {
@@ -55,7 +59,6 @@ public class UserController {
     @GetMapping("/get")
     public ResponseEntity<UserDto> getUser() {
         User user = getAuthenticatedUserOrThrow();
-        System.out.println("Kurwa user: " + user);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -74,6 +77,8 @@ public class UserController {
         if(!userDto.getId().equals(loggedUser.getId()) || !userDto.getEmail().equals(loggedUser.getEmail())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        notificationService.sendPushNotification(loggedUser.getTokenFCM(), "Chuj", "Cipia");
 
         return userService.findUserById(userDto.getId())
                 .map(user -> {
