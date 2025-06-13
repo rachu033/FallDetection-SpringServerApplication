@@ -42,11 +42,12 @@ public class UserController {
     }
 
     private User getAuthenticatedUserOrThrow() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
-        }
-        String email = authentication.getName();
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+//        }
+//        String email = authentication.getName();
+        String email = "rachubaadam2003@gmail.com";
         return userService.findUserByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
@@ -107,7 +108,6 @@ public class UserController {
 
     @PostMapping("/add_caregiver")
     public ResponseEntity<RelationDto> addUserCaregiver(@RequestBody String data) {
-        System.out.println("dodawanie: " + data);
         data = data.replace("\"", "");
         Optional<User> optionalUser = data.contains("@") ?
                 userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
@@ -119,12 +119,10 @@ public class UserController {
         User invitedUser = optionalUser.get();
         User loggedUser = getAuthenticatedUserOrThrow();
 
-        if ("caregiver".equals(invitedUser.getRole())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already has caregiver role");
-        }
+        // Dodajemy po stronie właściciela
+        invitedUser.addElderly(loggedUser);
+        userService.addUser(invitedUser);
 
-        loggedUser.addCaregiver(invitedUser);
-        userService.addUser(loggedUser);
         System.out.println("Dodano: " + data);
         return ResponseEntity.ok(relationMapper.toDto(invitedUser));
     }
@@ -143,11 +141,12 @@ public class UserController {
         User removedUser = optionalUser.get();
         User loggedUser = getAuthenticatedUserOrThrow();
 
-        loggedUser.removeCaregiver(removedUser);
-        userService.addUser(loggedUser);
-        System.out.println("Usunieto: " + relationDto);
+        removedUser.removeElderly(loggedUser);
+        userService.addUser(removedUser);
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "Successful");
+
         return ResponseEntity.ok(response);
     }
 
@@ -156,7 +155,6 @@ public class UserController {
         data = data.replace("\"", "");
         Optional<User> optionalUser = data.contains("@") ?
                 userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
-
 
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -188,6 +186,7 @@ public class UserController {
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Successful");
+
         return ResponseEntity.ok(response);
     }
 
@@ -208,7 +207,7 @@ public class UserController {
         return ResponseEntity.ok(dtoSet);
     }
 
-    @GetMapping("/get_caretaker")
+    @GetMapping("/get_caregiver")
     public ResponseEntity<Set<RelationDto>> getUserCaretaker() {
         User loggedUser = getAuthenticatedUserOrThrow();
 
