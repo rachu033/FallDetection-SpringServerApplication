@@ -17,6 +17,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,6 +69,7 @@ public class UserController {
 
     @PatchMapping("/patch")
     public ResponseEntity<UserDto> patchUser(@RequestBody UserDto userDto) {
+        System.out.println("Aktualizacja: " + userDto);
         if (userDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -104,6 +107,8 @@ public class UserController {
 
     @PostMapping("/add_caregiver")
     public ResponseEntity<RelationDto> addUserCaregiver(@RequestBody String data) {
+        System.out.println("dodawanie: " + data);
+        data = data.replace("\"", "");
         Optional<User> optionalUser = data.contains("@") ?
                 userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
 
@@ -120,12 +125,13 @@ public class UserController {
 
         loggedUser.addCaregiver(invitedUser);
         userService.addUser(loggedUser);
-
+        System.out.println("Dodano: " + data);
         return ResponseEntity.ok(relationMapper.toDto(invitedUser));
     }
 
     @PostMapping("/remove_caregiver")
-    public ResponseEntity<String> removeUserCaregiver(@RequestBody RelationDto relationDto) {
+    public ResponseEntity<Map<String, String>> removeUserCaregiver(@RequestBody RelationDto relationDto) {
+        System.out.println("usuwanie: " + relationDto);
         if (relationDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -139,16 +145,18 @@ public class UserController {
 
         loggedUser.removeCaregiver(removedUser);
         userService.addUser(loggedUser);
-
-        return ResponseEntity.ok("Successful");
+        System.out.println("Usunieto: " + relationDto);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Successful");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/add_elderly")
     public ResponseEntity<RelationDto> addUserElderly(@RequestBody String data) {
+        data = data.replace("\"", "");
         Optional<User> optionalUser = data.contains("@") ?
                 userService.findUserByEmail(data) : userService.findUserByPhoneNumber(data);
 
-        System.out.println("Haha");
 
         if (optionalUser.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -156,7 +164,6 @@ public class UserController {
 
         User invitedUser = optionalUser.get();
         User loggedUser = getAuthenticatedUserOrThrow();
-
         loggedUser.addElderly(invitedUser);
         userService.addUser(loggedUser);
 
@@ -164,7 +171,7 @@ public class UserController {
     }
 
     @PostMapping("/remove_elderly")
-    public ResponseEntity<String> removeUserElderly(@RequestBody RelationDto relationDto) {
+    public ResponseEntity<Map<String, String>> removeUserElderly(@RequestBody RelationDto relationDto) {
         if (relationDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -179,7 +186,9 @@ public class UserController {
         loggedUser.removeElderly(removedUser);
         userService.addUser(loggedUser);
 
-        return ResponseEntity.ok("Successful");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Successful");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/get_elderly")
