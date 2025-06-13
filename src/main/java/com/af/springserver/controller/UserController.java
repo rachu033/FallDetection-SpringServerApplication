@@ -42,12 +42,11 @@ public class UserController {
     }
 
     private User getAuthenticatedUserOrThrow() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
-//        }
-//        String email = authentication.getName();
-        String email = "rachubaadam2003@gmail.com";
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+        String email = authentication.getName();
         return userService.findUserByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
@@ -78,11 +77,10 @@ public class UserController {
         if (loggedUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+        notificationService.sendDataNotification(loggedUser.getTokenFCM(), "Chuj", "Dupa");
         if(!userDto.getId().equals(loggedUser.getId()) || !userDto.getEmail().equals(loggedUser.getEmail())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        notificationService.sendPushNotification(loggedUser.getTokenFCM(), "Chuj", "Cipia");
 
         return userService.findUserById(userDto.getId())
                 .map(user -> {
