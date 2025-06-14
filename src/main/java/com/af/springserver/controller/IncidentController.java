@@ -5,6 +5,7 @@ import com.af.springserver.mapper.IncidentMapper;
 import com.af.springserver.model.Incident;
 import com.af.springserver.model.User;
 import com.af.springserver.service.IncidentService;
+import com.af.springserver.service.NotificationService;
 import com.af.springserver.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +26,13 @@ public class IncidentController {
 
     private final IncidentService incidentService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Autowired
-    public IncidentController(IncidentService incidentService, UserService userService) {
+    public IncidentController(IncidentService incidentService, UserService userService, NotificationService notificationService) {
         this.incidentService = incidentService;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     private User getAuthenticatedUserOrThrow() {
@@ -45,9 +48,17 @@ public class IncidentController {
     @PutMapping("/add")
     public ResponseEntity<IncidentDto> createIncident(@RequestBody IncidentDto incidentDto) {
         User user = getAuthenticatedUserOrThrow();
-        System.out.println(incidentDto);
         Incident incident = IncidentMapper.toEntity(incidentDto);
-        Incident savedIncident = incidentService.addIncidentForUser(incident, user);
+        Incident savedIncident = incidentService.addIncident(incident, user);
+        var caregivers = user.getCaregiver();
+        if (caregivers != null) {
+            for (User caregiver : caregivers) {
+                String tokenFCM = caregiver.getTokenFCM();
+                String title = incident.getType();
+                String body = incident.getUser().getId() + " " + incident.getLatitude() + " " + incident.getLongitude();
+                notificationService.sendDataNotification(tokenFCM, title, body);
+            }
+        }
         return ResponseEntity.ok(IncidentMapper.toDto(savedIncident));
     }
 

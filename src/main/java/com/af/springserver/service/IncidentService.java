@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class IncidentService {
@@ -22,31 +21,7 @@ public class IncidentService {
         this.userRepository = userRepository;
     }
 
-    public void addIncident(Incident incident) {
-        incidentRepository.save(incident);
-    }
-
-    public void deleteIncident(Long id) {
-        incidentRepository.deleteById(id);
-    }
-
-    public Optional<Incident> findIncidentById(Long id) {
-        return incidentRepository.findById(id);
-    }
-
-    public List<Incident> findIncomeIncidentsByUserId(Long userId) {
-        return incidentRepository.findIncomeIncidentsByUserId(userId);
-    }
-
-    public List<Incident> findOutcomeIncidentsByUserId(Long userId) {
-        return incidentRepository.findOutcomeIncidentsByUserId(userId);
-    }
-
-    public List<Incident> findAllIncidentsByUserId(Long userId) {
-        return incidentRepository.findAllIncidentsByUserId(userId);
-    }
-
-    public Incident addIncidentForUser(Incident incident, User user) {
+    public Incident addIncident(Incident incident, User user) {
         incident.setUser(user);
 
         Incident savedIncident = incidentRepository.save(incident);
@@ -61,5 +36,21 @@ public class IncidentService {
         userRepository.save(user);
 
         return savedIncident;
+    }
+
+    public void deleteIncident(Long id) {
+        incidentRepository.deleteById(id);
+    }
+
+    public List<Incident> findIncomeIncidentsByUserId(Long userId) {
+        return incidentRepository.findIncomeIncidentsByUserId(userId);
+    }
+
+    public List<Incident> findOutcomeIncidentsByUserId(Long userId) {
+        return incidentRepository.findOutcomeIncidentsByUserId(userId);
+    }
+
+    public List<Incident> findAllIncidentsByUserId(Long userId) {
+        return incidentRepository.findAllIncidentsByUserId(userId);
     }
 }

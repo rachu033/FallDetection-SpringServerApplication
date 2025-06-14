@@ -4,11 +4,10 @@ import com.af.springserver.dto.RelationDto;
 import com.af.springserver.dto.UserDto;
 import com.af.springserver.mapper.RelationMapper;
 import com.af.springserver.mapper.UserMapper;
+import com.af.springserver.model.Incident;
 import com.af.springserver.model.User;
-import com.af.springserver.service.NotificationService;
+import com.af.springserver.service.IncidentService;
 import com.af.springserver.service.UserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,15 +26,15 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final RelationMapper relationMapper;
-    private final NotificationService notificationService;
+    private final IncidentService incidentService;
 
 
     @Autowired
-    public UserController(UserService userService, UserMapper userMapper, RelationMapper relationMapper, NotificationService notificationService) {
+    public UserController(UserService userService, UserMapper userMapper, RelationMapper relationMapper, IncidentService incidentService) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.relationMapper = relationMapper;
-        this.notificationService = new NotificationService();
+        this.incidentService = incidentService;
     }
 
     private User getAuthenticatedUserOrThrow() {
@@ -69,7 +65,6 @@ public class UserController {
 
     @PatchMapping("/patch")
     public ResponseEntity<UserDto> patchUser(@RequestBody UserDto userDto) {
-        System.out.println("Aktualizacja: " + userDto);
         if (userDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -77,7 +72,7 @@ public class UserController {
         if (loggedUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        notificationService.sendDataNotification(loggedUser.getTokenFCM(), "Chuj", "Dupa");
+
         if(!userDto.getId().equals(loggedUser.getId()) || !userDto.getEmail().equals(loggedUser.getEmail())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -100,7 +95,32 @@ public class UserController {
 
     @DeleteMapping("/remove")
     public ResponseEntity<Void> removeUser(@RequestBody Long id) {
+        User user = getAuthenticatedUserOrThrow();
+        if (!user.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        for (User elderly : new HashSet<>(user.getElderly())) {
+            user.removeElderly(elderly);
+            elderly.removeCaregiver(user);
+        }
+
+        for (User caregiver : new HashSet<>(user.getCaregiver())) {
+            user.removeCaregiver(caregiver);
+            caregiver.removeElderly(user);
+        }
+
+        for (Incident incident : new HashSet<>(user.getIncidents())) {
+            incident.removeUser(user);
+            user.removeIncident(incident);
+        }
+
+        for (Incident report : new HashSet<>(user.getReports())) {
+            incidentService.deleteIncident(report.getId());
+        }
+
         userService.deleteUser(id);
+
         return ResponseEntity.noContent().build();
     }
 
@@ -117,17 +137,14 @@ public class UserController {
         User invitedUser = optionalUser.get();
         User loggedUser = getAuthenticatedUserOrThrow();
 
-        // Dodajemy po stronie właściciela
         invitedUser.addElderly(loggedUser);
         userService.addUser(invitedUser);
 
-        System.out.println("Dodano: " + data);
         return ResponseEntity.ok(relationMapper.toDto(invitedUser));
     }
 
     @PostMapping("/remove_caregiver")
     public ResponseEntity<Map<String, String>> removeUserCaregiver(@RequestBody RelationDto relationDto) {
-        System.out.println("usuwanie: " + relationDto);
         if (relationDto.getId() == null) {
             return ResponseEntity.badRequest().build();
         }

@@ -21,10 +21,9 @@ public class NotificationService {
                 .build();
 
         try {
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Wysłano powiadomienie: " + response);
+            FirebaseMessaging.getInstance().send(message);
         } catch (FirebaseMessagingException e) {
-            System.err.println("Błąd przy wysyłaniu powiadomienia: " + e.getMessage());
+            System.err.println("FirebaseMessaging Error: " + e.getMessage());
         }
     }
 }

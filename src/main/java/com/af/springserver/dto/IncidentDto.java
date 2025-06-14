@@ -2,6 +2,7 @@ package com.af.springserver.dto;
 
 import java.util.Date;
 
+@SuppressWarnings("unused")
 public class IncidentDto {
     private Long id;
     private Long userId;

@@ -5,7 +5,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings("unused")
 @Entity
+@Table(name = "incidents")
 public class Incident {
 
     @Id
@@ -82,5 +84,11 @@ public class Incident {
     }
     public void setUsers(Set<User> users) {
         this.users = users;
+    }
+    public void addUser(User user) {
+        this.users.add(user);
+    }
+    public void removeUser(User user) {
+        this.users.remove(user);
     }
 }

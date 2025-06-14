@@ -1,5 +1,6 @@
 package com.af.springserver.dto;
 
+@SuppressWarnings("unused")
 public class UserDto {
     private Long id;
     private String name;

@@ -1,7 +1,10 @@
 package com.af.springserver.dto;
 
-//Dto for User with fewer information
+/*
+Dto for User with fewer information
+*/
 
+@SuppressWarnings("unused")
 public class RelationDto {
     private Long id;
     private String name;

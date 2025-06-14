@@ -1,12 +1,13 @@
 package com.af.springserver.mapper;
 
 import com.af.springserver.dto.RelationDto;
-import com.af.springserver.dto.UserDto;
 import com.af.springserver.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RelationMapper {
+
+    @SuppressWarnings("unused")
     public User toEntity(RelationDto dto) {
         if (dto == null) return null;
 

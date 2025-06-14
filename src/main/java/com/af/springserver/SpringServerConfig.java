@@ -26,7 +26,7 @@ public class SpringServerConfig {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("Błąd podczas inicjalizacji Firebase", e);
+            throw new RuntimeException("Error Firebase initialisation", e);
         }
     }
 }

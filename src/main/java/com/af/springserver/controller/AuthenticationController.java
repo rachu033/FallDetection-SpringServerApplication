@@ -1,6 +1,5 @@
 package com.af.springserver.controller;
 
-import com.af.springserver.mapper.UserMapper;
 import com.af.springserver.model.User;
 import com.af.springserver.service.UserService;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,7 +20,7 @@ public class AuthenticationController {
     private final UserService userService;
 
     @Autowired
-    public AuthenticationController(JwtUtil jwtUtil, UserService userService, UserMapper userMapper) {
+    public AuthenticationController(JwtUtil jwtUtil, UserService userService) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
     }
@@ -51,6 +50,7 @@ public class AuthenticationController {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class TokenRequest {
         private String idToken;
 
@@ -63,6 +63,7 @@ public class AuthenticationController {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class TokenResponse {
         private String jwt;
 
@@ -77,9 +78,5 @@ public class AuthenticationController {
         public void setJwt(String jwt) {
             this.jwt = jwt;
         }
-    }
-
-    private String generateCustomJwt(String uid, String email) {
-        return "mocked-jwt-for-" + uid;
     }
 }
