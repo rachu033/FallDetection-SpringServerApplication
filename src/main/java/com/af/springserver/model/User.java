@@ -32,7 +32,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-            name = "user_relations", // nazwa tabeli pośredniej
+            name = "user_relation",
             joinColumns = @JoinColumn(name = "caregiver_id"),
             inverseJoinColumns = @JoinColumn(name = "elderly_id")
     )
@@ -46,7 +46,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-            name = "user_incidents",
+            name = "user_incident",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "incident_id")
     )

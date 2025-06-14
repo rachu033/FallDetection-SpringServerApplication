@@ -137,6 +137,10 @@ public class UserController {
         User invitedUser = optionalUser.get();
         User loggedUser = getAuthenticatedUserOrThrow();
 
+        if (invitedUser.getId().equals(loggedUser.getId())) {
+            return ResponseEntity.notFound().build();
+        }
+
         invitedUser.addElderly(loggedUser);
         userService.addUser(invitedUser);
 
@@ -176,7 +180,17 @@ public class UserController {
         }
 
         User invitedUser = optionalUser.get();
+
+        if (invitedUser.getRole().equals("caregiver")) {
+            return ResponseEntity.notFound().build();
+        }
+
         User loggedUser = getAuthenticatedUserOrThrow();
+
+        if (invitedUser.getId().equals(loggedUser.getId())) {
+            return ResponseEntity.notFound().build();
+        }
+
         loggedUser.addElderly(invitedUser);
         userService.addUser(loggedUser);
 
