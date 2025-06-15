@@ -69,7 +69,6 @@ public class IncidentController {
         List<IncidentDto> dtoList = incidents.stream()
                 .map(IncidentMapper::toDto)
                 .collect(Collectors.toList());
-        System.out.println("KURWY" + dtoList.size());
         return ResponseEntity.ok(dtoList);
     }
 
@@ -80,7 +79,6 @@ public class IncidentController {
         List<IncidentDto> dtoList = incidents.stream()
                 .map(IncidentMapper::toDto)
                 .collect(Collectors.toList());
-        System.out.println("KURWY" + dtoList.size());
         return ResponseEntity.ok(dtoList);
     }
 
@@ -91,7 +89,6 @@ public class IncidentController {
         List<IncidentDto> dtoList = incidents.stream()
                 .map(IncidentMapper::toDto)
                 .collect(Collectors.toList());
-        System.out.println("KURWY" + dtoList.size());
         return ResponseEntity.ok(dtoList);
     }
 }
