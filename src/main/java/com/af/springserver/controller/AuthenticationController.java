@@ -42,10 +42,8 @@ public class AuthenticationController {
 
             return ResponseEntity.ok().body(new TokenResponse(jwt));
         } catch (FirebaseAuthException e) {
-            System.out.println(e.getMessage());
             return ResponseEntity.status(401).body("Invalid ID token: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             return ResponseEntity.status(500).body("Internal error: " + e.getMessage());
         }
     }
