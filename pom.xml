@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.4.5</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.af</groupId>
 	<artifactId>SpringServer</artifactId>
@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
-			<version>6.0.0</version> <!-- lub najnowsza zgodna z Twoim Spring Boot -->
+			<version>6.0.0</version>
 		</dependency>
 
 		<dependency>
@@ -92,7 +92,7 @@
 			<artifactId>guava</artifactId>
 			<version>32.1.2-jre</version>
 		</dependency>
-		<!-- Gson jako parser JSON -->
+
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client-gson</artifactId>
@@ -132,7 +132,7 @@
 
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId> <!-- dla obsługi JSON z Jacksonem -->
+			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
